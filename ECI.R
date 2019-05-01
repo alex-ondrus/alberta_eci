@@ -82,16 +82,16 @@ plotdata<-data.frame(Ref_Date=seq(as.yearmon("2002-01"),length.out=length(ABinde
   mutate(group=ifelse(group=="Labour","Labour Markets",group),
          group=ifelse(group=="Energy","Energy Sector",group),
          group=ifelse(group=="Business","Business Activity",group),
-         group=ifelse(group=="Households","Households Income/Spending",group))
-ggplot(plotdata %>% filter(Ref_Date>="Jan 2012"),
-       aes(Ref_Date,index,group=group,fill=group))+
+         group=ifelse(group=="Households","Households Income/Spending",group)) %>% 
+  filter(Ref_Date>="Jan 2012")
+ggplot(plotdata,aes(Ref_Date,index,group=group,fill=group))+
   geom_col(position="stack")+
   geom_line(aes(y=ABindex),size=1)+
   geom_hline(yintercept=0,size=1,color="gray50")+
   scale_fill_brewer(name="",palette="Set1")+
   mytheme+
   scale_y_continuous(expand=c(0,0))+
-  scale_x_continuous(expand=c(0,0),breaks=pretty_breaks(n=6),limit=c(NA,max(plotdata$Ref_Date)+1))+
+  scale_x_continuous(expand=c(0,0),breaks=pretty_breaks(n=8),limit=c(NA,max(plotdata$Ref_Date)+1))+
   annotate('text',x=max(plotdata$Ref_Date)+0.35,hjust=0,y=0.35,label="Above\nTrend",size=3)+
   annotate('text',x=max(plotdata$Ref_Date)+0.35,hjust=0,y=-0.35,label="Below\nTrend",size=3)+
   geom_segment(x=max(plotdata$Ref_Date)+0.3,xend=max(plotdata$Ref_Date)+0.3,
@@ -101,7 +101,7 @@ ggplot(plotdata %>% filter(Ref_Date>="Jan 2012"),
   geom_text(data=plotdata %>% filter(Ref_Date==max(Ref_Date),group=="Labour Markets"),
             aes(y=-1.25,label=paste("Latest:",round(ABindex,2))))+
   labs(y="Index of Economic Activity",
-       x="",title=paste0("Economic Conditions Index for Alberta (Jan 2012 to ",max(plotdata$Ref_Date),")"),
+       x="",title=paste0("Economic Conditions Index for Alberta (",min(plotdata$Ref_Date)," to ",max(plotdata$Ref_Date),")"),
        subtitle="Monthly data of economic activity (GDP) is available only for Canada, not provinces. Instead, this index 'averages' 41 monthly data series.
 The index is constructed to have mean zero and unit variance. A value of +1 means YoY growth is 1 standard deviation above trend.",
        caption="Sources: Own calculatons from various Statistics Canada data tables. Graph by @trevortombe.
