@@ -338,4 +338,4 @@ deflate<-cpi %>%
   ts(frequency = 12,start = c(2001,01))
 
 # Save the data for use with AAI.R and AAI_monthly.R
-save.image("AAI_data.RData")
+save.image("ECI_data.RData")

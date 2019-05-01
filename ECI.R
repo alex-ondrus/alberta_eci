@@ -4,7 +4,7 @@ source("core.R")
 ########################
 # Gather the main data #
 ########################
-load("AAI_data.RData")
+load("ECI_data.RData")
 
 ####################
 # Compile the Data #
