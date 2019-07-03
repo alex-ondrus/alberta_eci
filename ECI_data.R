@@ -66,9 +66,13 @@ housing<-housedata %>%
 
 # Average weekly earnings
 earndata<-getTABLE("14100223")
+earndata <- earndata %>%
+  rename(NAICS=North.American.Industry.Classification.System..NAICS.) %>%
+  mutate(test=regexpr(" \\[",NAICS)-1,
+         NAICS=ifelse(test>0,substr(NAICS,1,test),NAICS))
 earnings<-earndata %>%
   filter(GEO=="Alberta",Estimate=="Average weekly earnings including overtime for all employees",
-         North.American.Industry.Classification.System..NAICS.=="Industrial aggregate excluding unclassified businesses") %>%
+         NAICS=="Industrial aggregate excluding unclassified businesses") %>%
   select(When=Ref_Date,earnings=Value)
 
 # Retail Sales
@@ -184,8 +188,12 @@ trucks<-p$data %>%
 
 # Merchandise Exports
 exports_data<-getTABLE("12100119")
-exports_nonenergy<-exports_data %>%
+exports_data <- exports_data %>%
   rename(NAPCS="North.American.Product.Classification.System..NAPCS.") %>%
+  mutate(test=regexpr(" \\[",NAPCS)-1,
+         NAPCS=ifelse(test>0,substr(NAPCS,1,test),NAPCS))
+
+exports_nonenergy<-exports_data %>%
   filter(Trade=="Domestic export" & GEO=="Alberta" & Principal.trading.partners=="All countries" &
            (NAPCS=="Total of all merchandise" | NAPCS=="Energy products")) %>%
   mutate(NAPCS=replace(NAPCS,NAPCS=="Total of all merchandise","Other Goods"),
@@ -197,7 +205,6 @@ exports_nonenergy<-exports_data %>%
   filter(NAPCS=="Other Goods") %>%
   select(When=Ref_Date,exports_nonenergy=Value)
 exports_energy<-exports_data %>%
-  rename(NAPCS="North.American.Product.Classification.System..NAPCS.") %>%
   filter(Trade=="Domestic export" & GEO=="Alberta" & Principal.trading.partners=="All countries" &
            (NAPCS=="Total of all merchandise" | NAPCS=="Energy products")) %>%
   mutate(NAPCS=replace(NAPCS,NAPCS=="Total of all merchandise","Other Goods"),
@@ -213,10 +220,11 @@ exports_energy<-exports_data %>%
 wells<-fromJSON(paste(url,"WellsDrilled",sep="")) %>%
   filter(Commodity=="All Commodities" & WellType=="All Well Types") %>%
   mutate(When=as.yearmon(When)) %>%
+  arrange(When) %>%
   select(When,wells=Alberta)
 # manual add wells for latest month (if unavailable) from https://www.aer.ca/providing-information/data-and-reports/statistical-reports/st59
 wells<-wells %>%
-  rbind(data.frame(When=as.yearmon("2019-02"),wells=309+43))
+  rbind(data.frame(When=as.yearmon("2019-04"),wells=130+4))
 # Seasonally adjust
 p<-ggsdc(wells, aes(x = When, y = wells),frequency=12,method = "seas") + geom_line()
 wells<-p$data %>% 
@@ -267,12 +275,16 @@ EIclaims<-EIdata %>%
 
 # Payroll jobs (SEPH employment)
 SEPHdata<-getTABLE("14100223")
+SEPHdata <- SEPHdata %>%
+  rename(NAICS=North.American.Industry.Classification.System..NAICS.) %>%
+  mutate(test=regexpr(" \\[",NAICS)-1,
+         NAICS=ifelse(test>0,substr(NAICS,1,test),NAICS))
+
 SEPH<-SEPHdata %>%
   filter(GEO=="Alberta",Estimate=="Employment for all employees",
-         North.American.Industry.Classification.System..NAICS.=="Industrial aggregate including unclassified businesses") %>%
+         NAICS=="Industrial aggregate including unclassified businesses") %>%
   select(When=Ref_Date,seph=Value)
 SEPHpublic<-SEPHdata %>%
-  rename(NAICS=North.American.Industry.Classification.System..NAICS.) %>%
   filter(GEO=="Alberta",Estimate=="Employment for all employees",
          NAICS %in% c("Public administration","Educational services","Health care and social assistance")) %>%
   group_by(Ref_Date) %>%
@@ -284,15 +296,15 @@ SEPHprivate<-SEPH %>%
   select(When,seph_private)
 SEPHgoods<-SEPHdata %>%
   filter(GEO=="Alberta",Estimate=="Employment for all employees",
-         North.American.Industry.Classification.System..NAICS.=="Goods producing industries") %>%
+         NAICS=="Goods producing industries") %>%
   select(When=Ref_Date,seph_goods=Value)
 SEPHservices<-SEPHdata %>%
   filter(GEO=="Alberta",Estimate=="Employment for all employees",
-         North.American.Industry.Classification.System..NAICS.=="Service producing industries") %>%
+         NAICS=="Service producing industries") %>%
   select(When=Ref_Date,seph_services=Value)
 SEPHconstruct<-SEPHdata %>%
   filter(GEO=="Alberta",Estimate=="Employment for all employees",
-         North.American.Industry.Classification.System..NAICS.=="Construction") %>%
+         NAICS=="Construction") %>%
   select(When=Ref_Date,seph_construct=Value)
 
 # Average hours per week
@@ -339,3 +351,4 @@ deflate<-cpi %>%
 
 # Save the data for use with AAI.R and AAI_monthly.R
 save.image("ECI_data.RData")
+
