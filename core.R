@@ -1,9 +1,9 @@
 rm(list=ls(all=TRUE)) # wipes previous workspace
 
 # Packages used by this code
-#install.packages(c("ggplot2","scales","RColorBrewer","ggthemes","tidyverse",
-#                   "testit","ggrepel","jsonlite","data.table","ggalt","zoo",
-#                   "gridExtra","ggridges","ggpubr","ggseas","readxl"))
+#install.packages(c("ggplot2","scales","RColorBrewer","ggthemes","tidyverse","devtools",
+#                   "testit","ggrepel","jsonlite","data.table","ggalt","zoo","seasonal",
+#                   "gridExtra","ggridges","ggpubr","ggseas","readxl","gghighlight"))
 library(zoo)
 library(ggplot2)
 library(scales)
@@ -19,9 +19,10 @@ library(gridExtra)
 library(ggridges)
 library(ggpubr)
 library(testit)
-library(ggseas)
+library(ggseas) # if causes problems, ensure Rtools is installed prior to installing "seasonal"
 library(readxl)
 library(grid)
+library(gghighlight)
 
 #library(plyr)
 #library(colortools)
@@ -43,6 +44,18 @@ getTABLE<-function(x) {
   if (class(data$Ref_Date)=="character" & !grepl("/",data[1,"Ref_Date"])){
     data<-data %>% #mutate(Ref_Date=ifelse(grepl("/",Ref_Date),Ref_Date,Ref_Date=as.yearmon(Ref_Date)))
       mutate(Ref_Date=as.yearmon(Ref_Date))
+  }
+  if ("North.American.Industry.Classification.System..NAICS." %in% colnames(data)){
+    data <- data %>%
+      rename(NAICS=North.American.Industry.Classification.System..NAICS.) %>%
+      mutate(NAICS=ifelse(regexpr(" \\[",NAICS)>1,
+                          substr(NAICS,1,regexpr(" \\[",NAICS)-1),NAICS))
+  }
+  if ("North.American.Product.Classification.System..NAPCS." %in% colnames(data)){
+    data <- data %>%
+      rename(NAPCS="North.American.Product.Classification.System..NAPCS.") %>%
+      mutate(NAPCS=ifelse(regexpr(" \\[",NAPCS)>1,
+                          substr(NAPCS,1,regexpr(" \\[",NAPCS)-1),NAPCS))
   }
   return(data)
 }
@@ -216,13 +229,16 @@ mythememap<-theme(
   legend.text=element_text(size=10),
   plot.title = element_text(size = 16, face = "bold",hjust=0.5),
   plot.subtitle = element_text(size = 7, color="gray50",hjust=0.5),
-  plot.caption = element_text(size = 6, face = "italic")
+  plot.caption = element_text(size = 6, color="gray50")
 )
 
 # Useful lists
 provinces<-c("Canada","Newfoundland and Labrador","Prince Edward Island","Nova Scotia",
              "New Brunswick","Quebec","Ontario","Manitoba","Saskatchewan",
              "Alberta","British Columbia","Yukon","Northwest Territories","Nunavut")
+tenprov<-c("Newfoundland and Labrador","Prince Edward Island","Nova Scotia",
+           "New Brunswick","Quebec","Ontario","Manitoba","Saskatchewan",
+           "Alberta","British Columbia")
 provinces2<-c("CAN","NL","PE","NS",
              "NB","QC","ON","MB","SK",
              "AB","BC","YT","NT","NU")
@@ -292,6 +308,24 @@ gettrend<-function(x,y){
     rename_(.dots = setNames("var", y)) %>%
     select(-TC0,-TC1,-TC2,-TC3,-TC4,-TC5,-periodsleft)
   return(x)
+}
+
+# Construct own within-group seasonal adjustment with trend
+getseas<-function(df,g){
+  df<-df %>%
+    rename(group_var=g)
+  p<-ggsdc(df,aes(Ref_Date,Value,group=group_var,color=group_var),
+           method="seas")+geom_line()
+  temp<-p$data %>%
+    filter(component %in% c("irregular","trend")) %>%
+    group_by(x,group_var) %>%
+    summarise(Value=sum(y)) %>%
+    group_by(group_var) %>%
+    rename(Ref_Date=x) %>%
+    gettrend("Value") %>%
+    rename_(.dots = setNames("group_var", g)) %>%
+    ungroup()
+  return(temp)
 }
 
 

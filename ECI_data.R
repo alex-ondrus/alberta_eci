@@ -10,42 +10,42 @@ url<-"http://economicdashboard.alberta.ca/Download/DownloadFile?extension=JSON&r
 # Manufacturing
 mfgdata<-getTABLE("16100048")
 mfg<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Manufacturing",
+  filter(NAICS=="Manufacturing",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,mfg=Value)
 durable<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Durable goods industries",
+  filter(NAICS=="Durable goods industries",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,durables=Value)
 nondurable<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Non-durable goods industries",
+  filter(NAICS=="Non-durable goods industries",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,nondurables=Value)
 mfgpetro<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Petroleum and coal product manufacturing",
+  filter(NAICS=="Petroleum and coal product manufacturing",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,mfgpetro=Value)
 mfgchem<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Chemical manufacturing",
+  filter(NAICS=="Chemical manufacturing",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,mfgchem=Value)
 mfgmetal<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Fabricated metal product manufacturing",
+  filter(NAICS=="Fabricated metal product manufacturing",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,mfgmetal=Value)
 mfgfood<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Food manufacturing",
+  filter(NAICS=="Food manufacturing",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,mfgfood=Value)
 mfgmachinery<-mfgdata %>% 
-  filter(North.American.Industry.Classification.System..NAICS.=="Machinery manufacturing",
+  filter(NAICS=="Machinery manufacturing",
          Seasonal.adjustment=="Seasonally adjusted",GEO=="Alberta") %>%
   mutate(Value=ifelse(is.na(Value),0,Value)) %>%
   select(When=Ref_Date,mfgmachinery=Value)
@@ -53,7 +53,7 @@ mfgmachinery<-mfgdata %>%
 # WHolesale Trade
 tradedata<-getTABLE("20100074")
 trade<-tradedata %>%
-  filter(North.American.Industry.Classification.System..NAICS.=="Wholesale trade",
+  filter(NAICS=="Wholesale trade",
          Adjustments=="Seasonally adjusted",GEO=="Alberta") %>%
   select(When=Ref_Date,trade=Value)
 
@@ -66,10 +66,6 @@ housing<-housedata %>%
 
 # Average weekly earnings
 earndata<-getTABLE("14100223")
-earndata <- earndata %>%
-  rename(NAICS=North.American.Industry.Classification.System..NAICS.) %>%
-  mutate(test=regexpr(" \\[",NAICS)-1,
-         NAICS=ifelse(test>0,substr(NAICS,1,test),NAICS))
 earnings<-earndata %>%
   filter(GEO=="Alberta",Estimate=="Average weekly earnings including overtime for all employees",
          NAICS=="Industrial aggregate excluding unclassified businesses") %>%
@@ -78,7 +74,7 @@ earnings<-earndata %>%
 # Retail Sales
 retdata<-getTABLE("20100008")
 retail<-retdata %>%
-  filter(GEO=="Alberta",North.American.Industry.Classification.System..NAICS.=="Retail trade",
+  filter(GEO=="Alberta",NAICS=="Retail trade",
          Adjustments=="Seasonally adjusted") %>%
   select(When=Ref_Date,retail=Value)
 
@@ -188,11 +184,6 @@ trucks<-p$data %>%
 
 # Merchandise Exports
 exports_data<-getTABLE("12100119")
-exports_data <- exports_data %>%
-  rename(NAPCS="North.American.Product.Classification.System..NAPCS.") %>%
-  mutate(test=regexpr(" \\[",NAPCS)-1,
-         NAPCS=ifelse(test>0,substr(NAPCS,1,test),NAPCS))
-
 exports_nonenergy<-exports_data %>%
   filter(Trade=="Domestic export" & GEO=="Alberta" & Principal.trading.partners=="All countries" &
            (NAPCS=="Total of all merchandise" | NAPCS=="Energy products")) %>%
@@ -275,11 +266,6 @@ EIclaims<-EIdata %>%
 
 # Payroll jobs (SEPH employment)
 SEPHdata<-getTABLE("14100223")
-SEPHdata <- SEPHdata %>%
-  rename(NAICS=North.American.Industry.Classification.System..NAICS.) %>%
-  mutate(test=regexpr(" \\[",NAICS)-1,
-         NAICS=ifelse(test>0,substr(NAICS,1,test),NAICS))
-
 SEPH<-SEPHdata %>%
   filter(GEO=="Alberta",Estimate=="Employment for all employees",
          NAICS=="Industrial aggregate including unclassified businesses") %>%
@@ -336,7 +322,7 @@ MLS<-p$data %>%
 food_services_data<-getTABLE("21100019")
 restaurant_spend<-food_services_data %>%
   filter(GEO=="Alberta",
-         North.American.Industry.Classification.System..NAICS.=="Total, food services and drinking places",
+         NAICS=="Total, food services and drinking places",
          Seasonal.adjustment=="Seasonally adjusted",
          Service.detail=="Receipts") %>%
   select(When=Ref_Date,restaurant_spend=Value)
